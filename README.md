@@ -34,12 +34,12 @@ app/assets/javascripts/ember/{controllers,helpers,models,templates,views}
 
 Modify `app/assets/javascripts/ember/app.js.coffee` to look like this:
 
+    //= require_self
     //= require_tree controllers
     //= require_tree helpers
     //= require_tree models
     //= require_tree templates
     //= require_tree views
-    //= require_tree .
     
     window.App = Ember.Application.create()
 
@@ -52,3 +52,41 @@ before `require_tree .`:
 
 You created the basic structure to start coding your application. Next
 let's start adding models and controllers.
+
+== Create models and controllers
+
+Run the following in the shell to scaffold models and controllers:
+
+    rails generate model Contact firt_name:string last_name:string
+    rails generate scaffold_controller Contacts
+    rm -rf app/views/contacts
+    rake db:migrate
+
+Modify `app/models/contact.rb` and add these validations:
+
+    validates :first_name, :presence => true
+    validates :last_name, :presence => true
+
+Create `app/assets/javascripts/ember/models/contact.js.coffee` with the
+following content:
+
+    App.Contact = Ember.Resource.extend
+      resourceUrl:        '/contacts'
+      resourceName:       'contact'
+      resourceProperties: ['first_name', 'last_name']
+      
+      validate: ->
+        unless this.get('first_name') and
+               this.get('last_name')
+          'Contacts require a first and a last name.'
+
+      fullName: (->
+        "#{this.get 'first_name'} #{this.get 'last_name'}"
+        ).property 'first_name', 'last_name'
+
+Create `app/assets/javascripts/ember/controllers/contacts.js.coffee` with the following content:
+
+    App.contactsController = Ember.ResourceController.create
+      resourceType: App.Contact
+
+That is all for models and controllers, next we start to create views.
