@@ -13,6 +13,7 @@ group :assets do
   gem 'sass-rails'
   gem 'coffee-rails'
   gem 'haml-rails'
+  gem 'coffee-filter'
 
   gem 'therubyracer', :platforms => :ruby
 

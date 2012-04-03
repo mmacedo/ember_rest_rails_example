@@ -1,0 +1,9 @@
+%h1 Contacts
+
+%script{:type => "text/x-handlebars"}
+  :plain
+    {{ view App.ListContactsView }}
+
+:coffeescript
+  $ ->
+    App.contactsController.loadAll #{ @contacts.to_json.html_safe }

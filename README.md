@@ -1,6 +1,8 @@
 = Sample application with Rails, Ember and Ember-REST
 
-This is a step by step to generate this sample application.
+This is a step by step to generate this sample application. It uses CoffeeScript, SASS and Haml. Except for that and the use of this gem, it is basically a similar example:
+
+https://github.com/dgeb/ember_rest_example
 
 == Version
 
@@ -90,3 +92,222 @@ Create `app/assets/javascripts/ember/controllers/contacts.js.coffee` with the fo
       resourceType: App.Contact
 
 That is all for models and controllers, next we start to create views.
+
+== Create views
+
+=== Setup Haml (optional)
+
+Modify Gemfile and add the following lines to the `:asset` group:
+
+    gem 'haml-rails'
+    gem 'coffee-filter'
+
+Now run `bundle` and translate your already generated files. The deault Rails 3 layout at `app/views/layouts/application.html.erb` would become
+`app/views/layouts/application.html.haml` and look like this:
+
+    !!!
+    %html
+      %head
+        %title EmberRestRailsExample
+        = stylesheet_link_tag    "application", :media => "all"
+        = javascript_include_tag "application"
+        = csrf_meta_tags
+      %body
+        = yield
+
+=== Create Rails views
+
+You actually will need just one.
+
+Create `app/views/contacts/index.html.haml` with the following content:
+
+    %h1 Contacts
+
+    %script{:type => "text/x-handlebars"}
+      :plain
+        {{ view App.ListContactsView }}
+
+    :coffeescript
+      $ ->
+        App.contactsController.loadAll #{ @contacts.to_json.html_safe }
+
+The first creates an instance of the view that list contacts (not created yet) and the second loads the controller with data without making a second round-trip for the first load.
+
+=== Create Ember views (logical view)
+
+These are the actual views, so we will create one for each action under `app/asssets/javascripts/ember/views/contacts`.
+
+new.js.coffee
+
+    App.NewContactView = Ember.View.extend
+      tagName:      'form'
+      templateName: 'app/templates/contacts/edit'
+
+      init: ->
+        this._super()
+        this.set "contact", App.Contact.create()
+
+      didInsertElement: ->
+        this._super()
+        this.$('input:first').focus()
+
+      cancelForm: ->
+        this.get("parentView").hideNew()
+
+      submit: (event) ->
+        self = this
+        contact = this.get "contact"
+
+        event.preventDefault()
+
+        contact.saveResource()
+          .fail (e) ->
+            App.displayError e
+          .done ->
+            App.contactsController.pushObject contact
+            self.get("parentView").hideNew()
+
+edit.js.coffee
+
+    App.EditContactView = Ember.View.extend
+      tagName:      'form'
+      templateName: 'app/templates/contacts/edit'
+
+      init: ->
+        # create a new contact that's a duplicate of the contact in the parentView;
+        # changes made to the duplicate won't be applied to the original unless
+        # everything goes well in submitForm()
+        editableContact = App.Contact.create this.get('parentView').get('contact')
+        this.set "contact", editableContact
+        this._super()
+
+      didInsertElement: ->
+        this._super()
+        this.$('input:first').focus()
+
+      cancelForm: ->
+        this.get("parentView").hideEdit()
+
+      submit: (event) ->
+        self = this
+        contact = this.get "contact"
+
+        event.preventDefault()
+
+        contact.saveResource()
+          .fail (e) ->
+            App.displayError e
+          .done ->
+            parentView = self.get "parentView"
+            parentView.get("contact").duplicateProperties(contact)
+            parentView.hideEdit()
+
+show.js.coffee
+
+    App.ShowContactView = Ember.View.extend
+      templateName: 'app/templates/contacts/show'
+      classNames:   ['show-contact']
+      tagName:      'tr'
+
+      doubleClick: ->
+        this.showEdit()
+
+      showEdit: ->
+        this.set 'isEditing', true
+
+      hideEdit: ->
+        this.set 'isEditing', false
+
+      destroyRecord: ->
+        contact = this.get "contact"
+
+        contact.destroyResource()
+          .fail (e) ->
+            App.displayError e
+          .done ->
+            App.contactsController.removeObject contact
+
+list.js.coffee
+
+    App.ListContactsView = Ember.View.extend
+      templateName:    'app/templates/contacts/list'
+      contactsBinding: 'App.contactsController'
+
+      showNew: ->
+        this.set 'isNewVisible', true
+
+      hideNew: ->
+        this.set 'isNewVisible', false
+
+      refreshListing: ->
+        App.contactsController.findAll()
+
+Finally, let's see what it prints... no, wait: it won't print
+anything because we just made our logical views, now we need the view view or as it is called: the template.
+
+=== Create Ember templates (view view)
+
+These are the views of the logical views, we referenced three different templates in the views, so now we need to create them under `app/assets/javascripts/ember/templates/contacts`.
+
+Important note: it is pure html with handlebars, no haml.
+Other important notice: it looks like html, but they will be actually compiled to javascript that will then generate html in the client.
+
+edit.handlebars
+
+    {{#with contact}}
+      {{view Ember.TextField valueBinding="first_name" placeholder="First name"}}
+      {{view Ember.TextField valueBinding="last_name"  placeholder="Last name"}}
+      <button type="submit">
+        {{#if id}}Update{{else}}Create{{/if}}
+      </button>
+    {{/with}}
+    <a href="#" {{action "cancelForm"}}>Cancel</a>
+
+show.handlebars
+
+    <td>{{contact.id}}</td>
+    <td class="data">
+      {{#if isEditing}}
+        {{view App.EditContactView}}
+      {{else}}
+        {{contact.fullName}}
+      {{/if}}
+      <div class="commands">
+        {{#unless isEditing}}
+          <a href="#" {{action "showEdit"}}>Edit</a>
+          <a href="#" {{action "destroyRecord"}}>Remove</a>
+        {{/unless}}
+      </div>
+    </td>
+
+list.handlebars
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tbody>
+      {{#each contacts}}
+        {{view App.ShowContactView contactBinding="this"}}
+      {{/each}}
+      {{#if isNewVisible}}
+        <tr>
+          <td>*</td>
+          <td>
+            {{view App.NewContactView}}
+          </td>
+        </tr>
+      {{/if}}
+      </tbody>
+    </table>
+    <div class="commands">
+      <a href="#" {{action "showNew"}}>New Contact</a>
+      <a href="#" {{action "refreshListing"}}>Refresh Listing</a>
+    </div>
+
+== The End
+
+Now run it with `rails server`.
