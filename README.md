@@ -1,10 +1,10 @@
-= Sample application with Rails, Ember and Ember-REST
+# Sample application with Rails, Ember and Ember-REST
 
 This is a step by step to generate this sample application. It uses CoffeeScript, SASS and Haml. Except for that and the use of this gem, it is basically a similar example:
 
 https://github.com/dgeb/ember_rest_example
 
-== Version
+## Version
 
 If the versions are not exact as below, one or more steps may be different. If the versions below differ too highly, this tutorial may not be useful for you.
 
@@ -12,7 +12,7 @@ Running `ruby -v` gives me `ruby 1.9.3p125` plus some garbage.
 Running `rails -v` gives me `Rails 3.2.2`.
 The version of my Ember.js is "0.9.4".
 
-== Create the application
+## Create the application
 
 Execute the following lines in your shell (Windows users: a bash (a popular specie of shell) comes with Rails and Git) to create an empty application:
 
@@ -55,7 +55,7 @@ before `require_tree .`:
 You created the basic structure to start coding your application. Next
 let's start adding models and controllers.
 
-== Create models and controllers
+## Create models and controllers
 
 Run the following in the shell to scaffold models and controllers:
 
@@ -93,9 +93,9 @@ Create `app/assets/javascripts/ember/controllers/contacts.js.coffee` with the fo
 
 That is all for models and controllers, next we start to create views.
 
-== Create views
+## Create views
 
-=== Setup Haml (optional)
+### Setup Haml (optional)
 
 Modify Gemfile and add the following lines to the `:asset` group:
 
@@ -115,7 +115,7 @@ Now run `bundle` and translate your already generated files. The deault Rails 3 
       %body
         = yield
 
-=== Create Rails views
+### Create Rails views
 
 You actually will need just one.
 
@@ -133,7 +133,7 @@ Create `app/views/contacts/index.html.haml` with the following content:
 
 The first creates an instance of the view that list contacts (not created yet) and the second loads the controller with data without making a second round-trip for the first load.
 
-=== Create Ember views (logical view)
+### Create Ember views (logical view)
 
 These are the actual views, so we will create one for each action under `app/asssets/javascripts/ember/views/contacts`.
 
@@ -245,7 +245,7 @@ list.js.coffee
 Finally, let's see what it prints... no, wait: it won't print
 anything because we just made our logical views, now we need the view view or as it is called: the template.
 
-=== Create Ember templates (view view)
+### Create Ember templates (view view)
 
 These are the views of the logical views, we referenced three different templates in the views, so now we need to create them under `app/assets/javascripts/ember/templates/contacts`.
 
@@ -308,7 +308,7 @@ list.handlebars
       <a href="#" {{action "refreshListing"}}>Refresh Listing</a>
     </div>
 
-== Before we run it
+## Before we run it
 
 The app was built, but we would better make some adjust that is specific
 to each app, but will be needed.
@@ -425,6 +425,6 @@ content:
       }
     }
 
-== The End
+## The End
 
 Now run it with `rails server`.
